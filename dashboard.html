@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel kontrol lampu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --graphite:#14171A;
+  --steel:#1D2226;
+  --steel-2:#252B31;
+  --recess:#0F1214;
+  --bezel:#3A434B;
+  --line:#2E353B;
+  --text:#E6EAEE;
+  --mute:#8D98A2;
+  --amber:#FFB020;
+  --amber-hi:#FFD27A;
+  --amber-lo:#B36B00;
+  --ok:#44D07B;
+  --bad:#F0503C;
+  --idle:#6C7680;
+  --ui:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif;
+  --data:'JetBrains Mono',ui-monospace,Consolas,'Courier New',monospace;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{
+  margin:0;
+  min-height:100vh;
+  background-color:var(--graphite);
+  background-image:radial-gradient(rgba(255,255,255,.05) 1.2px,transparent 1.5px);
+  background-size:16px 16px;
+  color:var(--text);
+  font-family:var(--ui);
+  font-size:18px;
+  line-height:1.35;
+}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--amber-hi);outline-offset:3px}
+
+/* ---------- Header: pelat nama mesin ---------- */
+.hazard{
+  height:10px;
+  background:repeating-linear-gradient(-45deg,var(--amber) 0 14px,#14171A 14px 28px);
+}
+.head{
+  background:var(--steel);
+  border-bottom:1px solid var(--bezel);
+}
+.head-in{
+  max-width:1200px;margin:0 auto;padding:18px 20px;
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px 32px;
+}
+h1{
+  margin:0;
+  font-size:clamp(30px,4.4vw,44px);
+  font-weight:700;
+  line-height:1;
+  letter-spacing:.01em;
+}
+.sub{margin:6px 0 0;color:var(--mute);font-size:17px}
+.lamps{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:14px 30px}
+.lamps li{display:flex;align-items:center;gap:12px}
+.lamps .lbl{display:block;color:var(--mute);font-size:15px;line-height:1.1}
+.lamps .val{display:block;font-size:21px;font-weight:600;line-height:1.15}
+.lamp{
+  flex:none;width:18px;height:18px;border-radius:50%;
+  background:var(--idle);
+  border:2px solid #0B0D0F;
+  box-shadow:0 0 0 2px var(--bezel),inset 0 1px 2px rgba(255,255,255,.35);
+}
+.lamp[data-state="ok"]{background:var(--ok);box-shadow:0 0 0 2px var(--bezel),0 0 14px 3px rgba(68,208,123,.6),inset 0 1px 2px rgba(255,255,255,.5)}
+.lamp[data-state="warn"]{background:var(--amber);box-shadow:0 0 0 2px var(--bezel),0 0 14px 3px rgba(255,176,32,.6),inset 0 1px 2px rgba(255,255,255,.5);animation:blink 1s steps(2,jump-none) infinite}
+.lamp[data-state="bad"]{background:var(--bad);box-shadow:0 0 0 2px var(--bezel),0 0 14px 3px rgba(240,80,60,.6),inset 0 1px 2px rgba(255,255,255,.4)}
+@keyframes blink{50%{opacity:.35}}
+
+/* ---------- Tata letak ---------- */
+.wrap{
+  max-width:1200px;margin:0 auto;padding:24px 20px 56px;
+  display:grid;grid-template-columns:minmax(300px,370px) 1fr;gap:20px;align-items:start;
+}
+.side{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
+.wrap>*{min-width:0}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+
+/* ---------- Panel baja dengan baut ---------- */
+.panel{
+  position:relative;
+  padding:26px 26px 26px;
+  border:1px solid var(--bezel);
+  border-radius:6px;
+  background:
+    radial-gradient(circle at 12px 12px,#5A656F 0 2.5px,#1A1F23 3px 4px,transparent 4.5px),
+    radial-gradient(circle at calc(100% - 12px) 12px,#5A656F 0 2.5px,#1A1F23 3px 4px,transparent 4.5px),
+    radial-gradient(circle at 12px calc(100% - 12px),#5A656F 0 2.5px,#1A1F23 3px 4px,transparent 4.5px),
+    radial-gradient(circle at calc(100% - 12px) calc(100% - 12px),#5A656F 0 2.5px,#1A1F23 3px 4px,transparent 4.5px),
+    var(--steel);
+}
+h2{margin:0 0 14px;font-size:26px;font-weight:700;letter-spacing:.01em;line-height:1.1}
+
+/* ---------- Form akses ---------- */
+label{display:block;margin-bottom:6px;color:var(--mute);font-size:17px}
+.field{display:flex;gap:8px}
+input{
+  flex:1;min-width:0;height:54px;padding:0 14px;
+  background:var(--recess);
+  border:1px solid var(--bezel);
+  border-radius:4px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.6);
+  font-family:var(--data);font-size:21px;letter-spacing:.14em;
+}
+input::placeholder{color:#55606A;letter-spacing:.02em;font-family:var(--ui);font-size:19px}
+input:disabled{color:var(--mute);cursor:not-allowed}
+.btn{
+  height:54px;padding:0 18px;
+  border-radius:4px;border:1px solid var(--bezel);
+  background:var(--steel-2);
+  font-size:19px;font-weight:600;cursor:pointer;
+}
+.btn:hover:not(:disabled){background:#2F373E}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.primary{
+  width:100%;margin-top:14px;
+  border:0;border-bottom:4px solid var(--amber-lo);
+  background:linear-gradient(#FFC85A,#F29C00);
+  color:#14171A;font-size:23px;font-weight:700;letter-spacing:.02em;
+}
+.btn.primary:hover:not(:disabled){background:linear-gradient(#FFD27A,#FFAA1A)}
+.btn.primary:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px}
+.btn.primary[data-mode="disconnect"]{
+  background:var(--steel-2);color:var(--text);
+  border:1px solid var(--bezel);border-bottom:4px solid #0B0D0F;
+}
+.btn.primary:disabled{background:#3A434B;color:#9AA5AE;border-bottom-color:#2A3036}
+.notice{min-height:26px;margin:14px 0 0;font-size:18px}
+.notice[data-kind="ok"]{color:var(--ok)}
+.notice[data-kind="warn"]{color:var(--amber)}
+.notice[data-kind="bad"]{color:#FF8A78}
+.notice[data-kind="info"]{color:var(--mute)}
+.hint{margin:10px 0 0;color:var(--mute);font-size:16px;max-width:34ch}
+
+/* ---------- Alat ukur sensor ---------- */
+.meter{margin-top:6px}
+.meter + .meter{margin-top:18px}
+.m-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px}
+.m-label{color:var(--mute);font-size:19px;font-weight:600}
+.m-val{font-family:var(--data);font-size:30px;font-weight:500;line-height:1}
+.m-val i{margin-left:6px;font-style:normal;font-size:16px;color:var(--mute)}
+.bar{
+  height:20px;padding:3px;
+  background:var(--recess);
+  border:1px solid var(--bezel);border-radius:3px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+}
+.fill{
+  --lv:var(--ok);
+  height:100%;width:0;
+  background:repeating-linear-gradient(90deg,var(--lv) 0 9px,transparent 9px 12px);
+  transition:width .5s ease;
+}
+.fill[data-level="warn"]{--lv:var(--amber)}
+.fill[data-level="bad"]{--lv:var(--bad)}
+.scale{display:flex;justify-content:space-between;margin-top:4px;color:#66717B;font-family:var(--data);font-size:12px}
+.m-age{margin:14px 0 0;color:var(--mute);font-size:16px}
+
+/* ---------- Log ---------- */
+.log ol{
+  list-style:none;margin:0;padding:0;
+  max-height:300px;overflow:auto;
+  background:var(--recess);
+  border:1px solid var(--line);border-radius:4px;
+}
+.log li{
+  display:grid;grid-template-columns:auto 10px 1fr;gap:10px;align-items:baseline;
+  padding:7px 12px;border-bottom:1px solid #1A1F23;
+  font-family:var(--data);font-size:13.5px;line-height:1.45;
+}
+.log li:last-child{border-bottom:0}
+.log time{color:#66717B}
+.log li span:last-child{min-width:0;overflow-wrap:anywhere}
+.log .dot{width:8px;height:8px;border-radius:50%;background:var(--idle);align-self:center}
+.log li[data-k="ok"] .dot{background:var(--ok)}
+.log li[data-k="warn"] .dot{background:var(--amber)}
+.log li[data-k="bad"] .dot{background:var(--bad)}
+
+/* ---------- Kontrol lampu ---------- */
+.controls{overflow:hidden;min-height:520px}
+.c-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 20px;margin-bottom:6px}
+.c-head h2{margin:0}
+.readout{font-family:var(--data);font-size:15px;color:var(--mute)}
+.readout b{color:var(--amber);font-weight:500;font-size:20px}
+.master{display:flex;gap:8px}
+.master .btn{height:44px;font-size:18px}
+.module{margin-top:22px}
+.module h3{
+  display:flex;align-items:center;gap:14px;
+  margin:0 0 12px;color:var(--mute);font-size:19px;font-weight:600;
+}
+.module h3::after{content:"";flex:1;height:1px;background:var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+
+.ch{
+  display:grid;gap:10px;
+  padding:14px 14px 16px;
+  background:var(--steel-2);
+  border:1px solid var(--bezel);
+  border-top:4px solid var(--bezel);
+  border-radius:6px;
+  transition:border-color .2s,box-shadow .2s;
+}
+.ch-top{display:flex;align-items:center;justify-content:space-between}
+.ch-no{
+  min-width:38px;padding:1px 10px;text-align:center;
+  background:var(--recess);border:1px solid var(--bezel);border-radius:3px;
+  color:var(--mute);font-family:var(--data);font-size:19px;
+  text-shadow:0 1px 0 rgba(255,255,255,.08);
+}
+.bulb{width:54px;height:54px;overflow:visible}
+.bulb .glass{fill:#2A3137;stroke:#4A545D;stroke-width:1.5;transition:fill .2s}
+.bulb .fil{fill:none;stroke:#5B666F;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.bulb .cap{fill:#4A545D}
+.ch-name{font-size:22px;font-weight:600;line-height:1.1}
+.ch-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ch-state{font-size:17px;color:var(--mute)}
+.ch[data-on="true"]{
+  border-color:var(--amber-lo);border-top-color:var(--amber);
+  box-shadow:0 0 0 1px rgba(255,176,32,.2),0 10px 30px -10px rgba(255,176,32,.4);
+}
+.ch[data-on="true"] .glass{fill:var(--amber-hi);stroke:var(--amber);filter:drop-shadow(0 0 9px rgba(255,176,32,.85))}
+.ch[data-on="true"] .fil{stroke:#B36B00}
+.ch[data-on="true"] .ch-state{color:var(--amber);font-weight:600}
+.ch[data-on="true"] .ch-no{color:var(--amber);border-color:var(--amber-lo)}
+.ch[data-pending="true"] .ch-state{color:var(--amber)}
+
+/* Saklar togol dengan penanda I / O */
+.sw{
+  position:relative;flex:none;width:78px;height:40px;padding:0;
+  background:var(--recess);
+  border:1px solid var(--bezel);border-radius:5px;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.7);
+  cursor:pointer;
+}
+.sw .thumb{
+  position:absolute;top:3px;left:3px;width:36px;height:32px;border-radius:4px;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,.28) 0 2px,transparent 2px 5px),
+    linear-gradient(#66717B,#3E474F);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 2px 4px rgba(0,0,0,.6);
+  transition:transform .18s ease,background .18s;
+  display:grid;place-items:center;
+  font-family:var(--data);font-size:17px;font-weight:500;color:#D5DCE2;
+  text-shadow:0 1px 2px rgba(0,0,0,.7);
+}
+.sw .thumb::before{content:"O"}
+.sw[aria-checked="true"] .thumb::before{content:"I";color:#2B1A00;text-shadow:0 1px 0 rgba(255,255,255,.35)}
+.sw[aria-checked="true"] .thumb{
+  transform:translateX(35px);
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,.22) 0 2px,transparent 2px 5px),
+    linear-gradient(#FFC85A,#E08E00);
+}
+.sw:disabled{cursor:progress}
+.ch[data-pending="true"] .thumb{animation:pend .7s ease-in-out infinite alternate}
+@keyframes pend{from{filter:brightness(1)}to{filter:brightness(1.5)}}
+
+/* ---------- Kunci: tag lockout industri ---------- */
+.shutter{
+  position:absolute;inset:0;z-index:5;
+  display:grid;place-items:center;
+  background:rgba(15,18,20,.86);
+  backdrop-filter:blur(3px);
+  transition:transform .6s cubic-bezier(.7,0,.2,1);
+}
+.shutter.open{transform:translateY(-102%)}
+.tag{
+  position:relative;
+  width:min(300px,82%);
+  background:var(--amber);color:#14171A;
+  border-radius:8px;
+  padding:0 0 22px;
+  text-align:center;
+  box-shadow:0 14px 40px rgba(0,0,0,.6);
+}
+.tag::before{
+  content:"";position:absolute;left:50%;bottom:100%;width:3px;height:70px;
+  margin-left:-1.5px;background:#7A858F;
+}
+.tag .stripe{
+  height:16px;border-radius:8px 8px 0 0;
+  background:repeating-linear-gradient(-45deg,#14171A 0 10px,var(--amber) 10px 20px);
+}
+.tag .hole{
+  width:16px;height:16px;margin:12px auto 8px;border-radius:50%;
+  background:#14171A;box-shadow:inset 0 2px 3px rgba(0,0,0,.8);
+}
+.tag strong{display:block;font-size:40px;font-weight:700;line-height:1}
+.tag span{display:block;margin:8px auto 0;max-width:22ch;font-size:19px;font-weight:500;line-height:1.25}
+
+noscript{display:block;padding:20px;text-align:center;color:var(--amber)}
+
+@media (max-width:520px){
+  .panel{padding:24px 20px}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .ch{padding:12px}
+  .ch-name{font-size:20px}
+  .sw{width:70px}
+  .sw .thumb{width:32px}
+  .sw[aria-checked="true"] .thumb{transform:translateX(31px)}
+  .bulb{width:46px;height:46px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="head">
+  <div class="hazard" aria-hidden="true"></div>
+  <div class="head-in">
+    <div>
+      <h1>Panel kontrol lampu</h1>
+      <p class="sub">ESP32-S3 dengan 8 relay, lewat MQTT HiveMQ</p>
+    </div>
+    <ul class="lamps" aria-label="Status koneksi">
+      <li><span class="lamp" id="lamp-broker" data-state="warn"></span><span><span class="lbl">Broker</span><span class="val" id="txt-broker">Menghubungkan</span></span></li>
+      <li><span class="lamp" id="lamp-device" data-state="idle"></span><span><span class="lbl">Perangkat</span><span class="val" id="txt-device">Menunggu</span></span></li>
+      <li><span class="lamp" id="lamp-session" data-state="idle"></span><span><span class="lbl">Sesi</span><span class="val" id="txt-session">Terkunci</span></span></li>
+    </ul>
+  </div>
+</header>
+
+<noscript>Dashboard ini membutuhkan JavaScript.</noscript>
+
+<main class="wrap">
+  <div class="side">
+    <section class="panel" aria-labelledby="h-akses">
+      <h2 id="h-akses">Akses perangkat</h2>
+      <form id="accessForm" autocomplete="off">
+        <label for="token">Token</label>
+        <div class="field">
+          <input id="token" type="password" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Masukkan token">
+          <button type="button" class="btn" id="peek" aria-pressed="false">Lihat</button>
+        </div>
+        <button type="submit" class="btn primary" id="connectBtn" data-mode="connect">Connect</button>
+      </form>
+      <p class="notice" id="notice" role="status" aria-live="polite" data-kind="info">Masukkan token lalu tekan Connect.</p>
+      <p class="hint">Token pengguna tampil di layar LCD perangkat setelah WiFi dan MQTT terhubung, dan berganti setiap perangkat dihidupkan.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-sensor">
+      <h2 id="h-sensor">Kondisi ruangan</h2>
+      <div class="meter">
+        <div class="m-top"><span class="m-label">Suhu</span><span class="m-val"><b id="valTemp">—</b><i>°C</i></span></div>
+        <div class="bar" aria-hidden="true"><div class="fill" id="barTemp"></div></div>
+        <div class="scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span></div>
+      </div>
+      <div class="meter">
+        <div class="m-top"><span class="m-label">Kelembapan</span><span class="m-val"><b id="valHum">—</b><i>%</i></span></div>
+        <div class="bar" aria-hidden="true"><div class="fill" id="barHum"></div></div>
+        <div class="scale" aria-hidden="true"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <p class="m-age" id="sensorAge">Menunggu data sensor</p>
+    </section>
+
+    <section class="panel log" aria-labelledby="h-log">
+      <h2 id="h-log">Log aktivitas</h2>
+      <ol id="log" aria-live="off"></ol>
+    </section>
+  </div>
+
+  <section class="panel controls" aria-labelledby="h-kontrol">
+    <div id="controlsBody" inert>
+      <div class="c-head">
+        <h2 id="h-kontrol">Kontrol lampu</h2>
+        <div class="readout"><b id="onCount">0</b> dari 8 lampu menyala</div>
+        <div class="master">
+          <button type="button" class="btn" id="allOff">Matikan semua</button>
+          <button type="button" class="btn" id="allOn">Nyalakan semua</button>
+        </div>
+      </div>
+      <div class="module">
+        <h3>Modul A, relay 1–4</h3>
+        <div class="grid" id="gridA"></div>
+      </div>
+      <div class="module">
+        <h3>Modul B, relay 5–8</h3>
+        <div class="grid" id="gridB"></div>
+      </div>
+    </div>
+
+    <div class="shutter" id="shutter" aria-hidden="false">
+      <div class="tag">
+        <div class="stripe"></div>
+        <div class="hole"></div>
+        <strong>Terkunci</strong>
+        <span>Masukkan token dan tekan Connect untuk membuka kontrol.</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<template id="tileTpl">
+  <article class="ch" data-on="false" data-pending="false">
+    <div class="ch-top">
+      <span class="ch-no"></span>
+      <svg class="bulb" viewBox="0 0 48 48" aria-hidden="true">
+        <path class="glass" d="M24 4C15.7 4 9.5 10.2 9.5 18c0 4.8 2.2 7.8 4.6 10.5 1.5 1.7 2.4 3.2 2.4 5.1V36h15v-2.4c0-1.9.9-3.4 2.4-5.1 2.4-2.700 4.600-5.700 4.600-10.500C38.500 10.200 32.300 4 24 4z"/>
+        <path class="fil" d="M19 32l3.200-9 1.800 4 1.800-4L29 32"/>
+        <rect class="cap" x="16.500" y="38" width="15" height="3.200" rx="1.200"/>
+        <rect class="cap" x="19" y="42.500" width="10" height="3" rx="1.500"/>
+      </svg>
+    </div>
+    <div class="ch-name"></div>
+    <div class="ch-row">
+      <span class="ch-state">Mati</span>
+      <button type="button" class="sw" role="switch" aria-checked="false"><span class="thumb"></span></button>
+    </div>
+  </article>
+</template>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+   KONFIGURASI  -->  ISI BAGIAN YANG BERTANDA  "<<< ISI DI SINI"
+   ===================================================================== */
+const CONFIG = {
+  BROKER_HOST: "21e4f9cb82eb49ea9bb25f4e993cbed5.s1.eu.hivemq.cloud", // <<< ISI DI SINI (Cluster URL HiveMQ, tanpa mqtts:// dan tanpa port)
+  BROKER_WS_PORT: 8884,        // port WebSocket TLS HiveMQ Cloud (jangan diubah)
+  MQTT_USER: "Meka01",         // <<< ISI DI SINI (username kredensial HiveMQ untuk dashboard)
+  MQTT_PASSWORD: "retorika",   // <<< ISI DI SINI (password kredensial HiveMQ untuk dashboard)
+  TOPIC_PREFIX: "ajarin/esp32s3", // harus sama dengan TOPIC_PREFIX di main.py
+  CHANNEL_NAMES: [             // nama tiap relay (boleh diubah)
+    "Lampu 1", "Lampu 2", "Lampu 3", "Lampu 4",
+    "Lampu 5", "Lampu 6", "Lampu 7", "Lampu 8"
+  ]
+};
+
+/* ===================================================================== */
+const P = CONFIG.TOPIC_PREFIX;
+const T = {
+  status: P + '/status',
+  resp:   P + '/resp',
+  state:  P + '/state',
+  sensor: P + '/sensor',
+  auth:   P + '/auth',
+  cmd:    P + '/cmd'
+};
+const AUTH_TIMEOUT = 7000;
+const CMD_TIMEOUT = 5000;
+
+const $ = (id) => document.getElementById(id);
+const el = {
+  form: $('accessForm'), token: $('token'), peek: $('peek'), connect: $('connectBtn'),
+  notice: $('notice'), log: $('log'), body: $('controlsBody'), shutter: $('shutter'),
+  count: $('onCount'), allOn: $('allOn'), allOff: $('allOff')
+};
+
+const S = {
+  device: 'unknown',           // unknown | ok | bad
+  authorized: false,
+  role: '',
+  token: '',
+  resume: '',                  // token untuk memulihkan sesi otomatis setelah koneksi putus
+  relays: new Array(8).fill(0),
+  authReq: null,               // {id, token, silent, timer}
+  pending: {},                 // index relay -> {id, on, timer}
+  sensor: null                 // {temp, hum, at}
+};
+let client = null;
+
+const newId = () => Math.random().toString(36).slice(2, 10);
+const chName = (i) => CONFIG.CHANNEL_NAMES[i] || ('Lampu ' + (i + 1));
+
+/* ---------- UI: lampu status, notice, log ---------- */
+function setLamp(id, st, text) {
+  $('lamp-' + id).dataset.state = st;
+  $('txt-' + id).textContent = text;
+}
+function notice(kind, text) {
+  el.notice.dataset.kind = kind;
+  el.notice.textContent = text;
+}
+function logEvent(kind, text) {
+  const li = document.createElement('li');
+  li.dataset.k = kind;
+  const t = document.createElement('time');
+  t.textContent = new Date().toLocaleTimeString('id-ID', { hour12: false });
+  const d = document.createElement('span');
+  d.className = 'dot';
+  const m = document.createElement('span');
+  m.textContent = text;
+  li.append(t, d, m);
+  el.log.prepend(li);
+  while (el.log.children.length > 60) el.log.lastChild.remove();
+}
+
+/* ---------- UI: tile lampu ---------- */
+const tpl = $('tileTpl');
+const tiles = [];
+for (let i = 0; i < 8; i++) {
+  const n = tpl.content.firstElementChild.cloneNode(true);
+  n.querySelector('.ch-no').textContent = String(i + 1);
+  n.querySelector('.ch-name').textContent = chName(i);
+  const sw = n.querySelector('.sw');
+  sw.setAttribute('aria-label', chName(i));
+  sw.addEventListener('click', () => onToggle(i));
+  (i < 4 ? $('gridA') : $('gridB')).appendChild(n);
+  tiles.push(n);
+}
+
+function render() {
+  let on = 0;
+  tiles.forEach((n, i) => {
+    const actual = !!S.relays[i];
+    const p = S.pending[i];
+    if (actual) on++;
+    n.dataset.on = String(actual);
+    n.dataset.pending = String(!!p);
+    const sw = n.querySelector('.sw');
+    sw.setAttribute('aria-checked', String(p ? p.on : actual));
+    sw.disabled = !!p;
+    n.querySelector('.ch-state').textContent = p ? 'Menunggu perangkat' : (actual ? 'Menyala' : 'Mati');
+  });
+  el.count.textContent = String(on);
+}
+
+function renderAccess() {
+  const busy = !!S.authReq;
+  el.token.disabled = S.authorized || busy;
+  el.peek.disabled = S.authorized;
+  el.token.placeholder = S.authorized ? 'Sesi aktif' : 'Masukkan token';
+  el.connect.dataset.mode = S.authorized ? 'disconnect' : 'connect';
+  el.connect.textContent = S.authorized ? 'Putuskan' : (busy ? 'Memeriksa token…' : 'Connect');
+  el.connect.disabled = busy;
+  el.body.toggleAttribute('inert', !S.authorized);
+  el.shutter.classList.toggle('open', S.authorized);
+  el.shutter.setAttribute('aria-hidden', String(S.authorized));
+  setLamp('session', S.authorized ? 'ok' : 'idle', S.authorized ? 'Terhubung' : 'Terkunci');
+}
+
+/* ---------- Sensor DHT ---------- */
+const meters = {
+  temp: { val: $('valTemp'), bar: $('barTemp'), min: 0, max: 50,
+          fmt: (v) => v.toFixed(1), level: (v) => (v >= 35 ? 'bad' : v >= 30 ? 'warn' : 'ok') },
+  hum:  { val: $('valHum'), bar: $('barHum'), min: 0, max: 100,
+          fmt: (v) => v.toFixed(0), level: (v) => (v < 30 || v > 75 ? 'warn' : 'ok') }
+};
+const SENSOR_STALE = 20000;
+
+function renderSensor() {
+  const s = S.sensor;
+  const fresh = !!s && S.device === 'ok' && (Date.now() - s.at) < SENSOR_STALE;
+  Object.keys(meters).forEach((k) => {
+    const m = meters[k];
+    if (fresh) {
+      const v = s[k];
+      m.val.textContent = m.fmt(v);
+      m.bar.style.width = Math.max(0, Math.min(100, (v - m.min) / (m.max - m.min) * 100)) + '%';
+      m.bar.dataset.level = m.level(v);
+    } else {
+      m.val.textContent = '—';
+      m.bar.style.width = '0%';
+    }
+  });
+  $('sensorAge').textContent = fresh
+    ? 'Diperbarui ' + Math.max(0, Math.round((Date.now() - s.at) / 1000)) + ' detik lalu'
+    : (S.device === 'bad' ? 'Perangkat offline' : 'Menunggu data sensor');
+}
+
+function onSensor(d) {
+  const t = Number(d.temp), h = Number(d.hum);
+  if (!isFinite(t) || !isFinite(h)) return;
+  S.sensor = { temp: t, hum: h, at: Date.now() };
+  renderSensor();
+}
+
+/* ---------- Sesi ---------- */
+function errText(code) {
+  switch (code) {
+    case 'wrong_token': return 'Token salah. Periksa token di layar LCD perangkat.';
+    case 'locked': return 'Perangkat mengunci akses 30 detik setelah 5 kali salah. Coba lagi nanti.';
+    case 'bad_format': return 'Perintah tidak dikenali perangkat.';
+    case 'relay_range': return 'Nomor relay di luar jangkauan.';
+    default: return 'Perangkat menolak permintaan' + (code ? ' (' + code + ').' : '.');
+  }
+}
+
+function authenticate(token, silent) {
+  if (!client || !client.connected) { notice('bad', 'Belum terhubung ke broker. Tunggu lampu Broker menyala hijau.'); return; }
+  if (S.device !== 'ok') { notice('bad', 'Perangkat sedang offline. Nyalakan perangkat lalu coba lagi.'); return; }
+  if (S.authReq) return;
+  const id = newId();
+  S.authReq = { id, token, silent, timer: setTimeout(() => authTimeout(id), AUTH_TIMEOUT) };
+  renderAccess();
+  notice('info', silent ? 'Memulihkan sesi…' : 'Memeriksa token ke perangkat…');
+  logEvent('info', silent ? 'Memulihkan sesi dengan token sebelumnya' : 'Mengirim token ke perangkat');
+  client.publish(T.auth, JSON.stringify({ token, rid: id }), { qos: 0 }, (err) => {
+    if (err && S.authReq && S.authReq.id === id) {
+      clearTimeout(S.authReq.timer); S.authReq = null; renderAccess();
+      notice('bad', 'Gagal mengirim token ke broker.');
+    }
+  });
+}
+
+function authTimeout(id) {
+  if (!S.authReq || S.authReq.id !== id) return;
+  S.authReq = null;
+  S.resume = '';
+  renderAccess();
+  notice('bad', 'Perangkat tidak menjawab. Pastikan perangkat online lalu coba lagi.');
+  logEvent('bad', 'Tidak ada jawaban dari perangkat');
+}
+
+function finishAuth(d, r) {
+  clearTimeout(r.timer);
+  S.authReq = null;
+  if (d.ok) {
+    S.authorized = true;
+    S.role = d.role || 'user';
+    S.token = r.token;
+    S.resume = '';
+    el.token.value = '';
+    renderAccess();
+    notice('ok', 'Terhubung ke perangkat. Sesi aktif sebagai ' + S.role + '.');
+    logEvent('ok', 'Token diterima, sesi aktif sebagai ' + S.role);
+  } else {
+    S.resume = '';
+    renderAccess();
+    notice(r.silent ? 'warn' : 'bad', r.silent ? 'Sesi lama tidak berlaku lagi. Masukkan token lagi.' : errText(d.error));
+    logEvent('bad', 'Token ditolak (' + (d.error || 'tidak diketahui') + ')');
+  }
+}
+
+function clearPending() {
+  Object.keys(S.pending).forEach((k) => clearTimeout(S.pending[k].timer));
+  S.pending = {};
+}
+
+function lockSession(reason, keepResume) {
+  if (!S.authorized) return;
+  S.resume = keepResume ? S.token : '';
+  S.authorized = false;
+  S.role = '';
+  S.token = '';
+  clearPending();
+  renderAccess();
+  render();
+  notice('warn', reason);
+  logEvent('warn', reason);
+}
+
+function tryResume() {
+  if (S.resume && !S.authorized && !S.authReq && client && client.connected && S.device === 'ok') {
+    const t = S.resume;
+    S.resume = '';
+    authenticate(t, true);
+  }
+}
+
+/* ---------- Perintah relay ---------- */
+function sendCmd(i, on) {
+  if (!client || !client.connected) { notice('bad', 'Belum terhubung ke broker.'); return; }
+  const id = newId();
+  S.pending[i] = { id, on, timer: setTimeout(() => cmdFail(i, id, 'Tidak ada konfirmasi dari perangkat'), CMD_TIMEOUT) };
+  render();
+  client.publish(T.cmd, JSON.stringify({ token: S.token, relay: i + 1, state: on ? 1 : 0, rid: id }), { qos: 0 }, (err) => {
+    if (err) cmdFail(i, id, 'Gagal mengirim perintah');
+  });
+}
+
+function cmdFail(i, id, msg) {
+  const p = S.pending[i];
+  if (!p || p.id !== id) return;
+  clearTimeout(p.timer);
+  delete S.pending[i];
+  render();
+  notice('bad', chName(i) + ': ' + msg + '.');
+  logEvent('bad', chName(i) + ': ' + msg);
+}
+
+function cmdDone(i) {
+  const p = S.pending[i];
+  if (!p) return;
+  clearTimeout(p.timer);
+  delete S.pending[i];
+  logEvent('ok', chName(i) + (p.on ? ' menyala' : ' mati'));
+}
+
+function onToggle(i) {
+  if (!S.authorized || S.pending[i]) return;
+  sendCmd(i, !S.relays[i]);
+}
+
+function setAll(on) {
+  if (!S.authorized) return;
+  let k = 0;
+  for (let i = 0; i < 8; i++) {
+    if (S.pending[i] || (S.relays[i] ? 1 : 0) === (on ? 1 : 0)) continue;
+    setTimeout(() => { if (S.authorized) sendCmd(i, on); }, k * 150);
+    k++;
+  }
+  if (k === 0) notice('info', on ? 'Semua lampu sudah menyala.' : 'Semua lampu sudah mati.');
+}
+
+/* ---------- Pesan masuk dari broker ---------- */
+function onStatus(text) {
+  if (text === 'online') {
+    S.device = 'ok';
+    setLamp('device', 'ok', 'Online');
+    logEvent('ok', 'Perangkat online');
+    renderSensor();
+    tryResume();
+  } else if (text === 'offline') {
+    S.device = 'bad';
+    setLamp('device', 'bad', 'Offline');
+    logEvent('bad', 'Perangkat offline');
+    S.sensor = null;
+    renderSensor();
+    lockSession('Perangkat offline. Sesi dikunci.', true);
+  }
+}
+
+function onState(d) {
+  if (!Array.isArray(d.relays) || d.relays.length !== 8) return;
+  const before = S.relays.slice();
+  S.relays = d.relays.map((v) => (v ? 1 : 0));
+  for (let i = 0; i < 8; i++) {
+    const p = S.pending[i];
+    if (p && S.relays[i] === (p.on ? 1 : 0)) cmdDone(i);
+    else if (!p && S.authorized && before[i] !== S.relays[i]) {
+      logEvent('info', chName(i) + (S.relays[i] ? ' menyala' : ' mati') + ' (diubah dari luar)');
+    }
+  }
+  render();
+}
+
+function onResp(d) {
+  if (d.type === 'auth') {
+    const r = S.authReq;
+    if (!r) return;
+    if (d.rid && d.rid !== r.id) return;   // balasan untuk dashboard lain
+    finishAuth(d, r);
+  } else if (d.type === 'cmd' && d.rid) {
+    const i = Object.keys(S.pending).find((k) => S.pending[k].id === d.rid);
+    if (i === undefined) return;
+    if (d.ok) {
+      S.relays[i] = d.state ? 1 : 0;
+      cmdDone(Number(i));
+      render();
+    } else {
+      cmdFail(Number(i), d.rid, errText(d.error).replace(/\.$/, ''));
+      if (d.error === 'wrong_token') lockSession('Token tidak berlaku lagi. Masukkan token lagi.', false);
+    }
+  }
+}
+
+function onMessage(topic, payload) {
+  const text = payload.toString();
+  if (topic === T.status) { onStatus(text.trim()); return; }
+  let d;
+  try { d = JSON.parse(text); } catch (e) { return; }
+  if (!d || typeof d !== 'object') return;
+  if (topic === T.state) onState(d);
+  else if (topic === T.sensor) onSensor(d);
+  else if (topic === T.resp) onResp(d);
+}
+
+/* ---------- Koneksi broker ---------- */
+function startBroker() {
+  if (typeof mqtt === 'undefined') {
+    setLamp('broker', 'bad', 'Library gagal dimuat');
+    notice('bad', 'Library MQTT gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
+    logEvent('bad', 'mqtt.js gagal dimuat dari CDN');
+    return;
+  }
+  const url = 'wss://' + CONFIG.BROKER_HOST + ':' + CONFIG.BROKER_WS_PORT + '/mqtt';
+  logEvent('info', 'Menghubungkan ke ' + CONFIG.BROKER_HOST);
+  client = mqtt.connect(url, {
+    clientId: 'dashboard-' + newId(),
+    username: CONFIG.MQTT_USER,
+    password: CONFIG.MQTT_PASSWORD,
+    keepalive: 30,
+    reconnectPeriod: 3000,
+    connectTimeout: 10000,
+    clean: true
+  });
+
+  client.on('connect', () => {
+    setLamp('broker', 'ok', 'Terhubung');
+    logEvent('ok', 'Terhubung ke broker HiveMQ');
+    client.subscribe([T.status, T.resp, T.state, T.sensor], { qos: 0 }, (err) => {
+      if (err) logEvent('bad', 'Gagal subscribe topik');
+    });
+  });
+  client.on('reconnect', () => setLamp('broker', 'warn', 'Menyambung ulang'));
+  client.on('close', () => {
+    setLamp('broker', 'bad', 'Terputus');
+    S.device = 'unknown';
+    S.sensor = null;
+    renderSensor();
+    setLamp('device', 'idle', 'Menunggu');
+    lockSession('Koneksi ke broker terputus. Sesi dikunci.', true);
+  });
+  client.on('error', (err) => {
+    const code = err && err.code;
+    if (code === 4 || code === 5) {
+      setLamp('broker', 'bad', 'Login ditolak');
+      notice('bad', 'Broker menolak login dashboard. Periksa MQTT_USER dan MQTT_PASSWORD di dashboard.html.');
+      logEvent('bad', 'Broker menolak username/password');
+      client.end(true);
+    } else {
+      logEvent('bad', 'Error broker: ' + ((err && err.message) || err));
+    }
+  });
+  client.on('message', onMessage);
+}
+
+/* ---------- Event UI ---------- */
+el.form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (S.authorized) {
+    lockSession('Sesi diputus.', false);
+    notice('info', 'Sesi diputus. Masukkan token untuk terhubung lagi.');
+    return;
+  }
+  const token = el.token.value.trim();
+  if (!token) { notice('warn', 'Masukkan token dulu.'); el.token.focus(); return; }
+  S.resume = '';
+  authenticate(token, false);
+});
+
+el.peek.addEventListener('click', () => {
+  const show = el.token.type === 'password';
+  el.token.type = show ? 'text' : 'password';
+  el.peek.textContent = show ? 'Sembunyi' : 'Lihat';
+  el.peek.setAttribute('aria-pressed', String(show));
+});
+
+el.allOn.addEventListener('click', () => setAll(true));
+el.allOff.addEventListener('click', () => setAll(false));
+
+/* ---------- Mulai ---------- */
+renderAccess();
+render();
+renderSensor();
+setInterval(renderSensor, 1000);
+logEvent('info', 'Dashboard dimuat');
+startBroker();
+})();
+</script>
+</body>
+</html>
